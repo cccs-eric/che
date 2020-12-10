@@ -44,6 +44,9 @@ global:
   singleHostGatewayLabels: app=che,component=che-gateway-config
   # Public hostname of the installed Che server. If value is omitted then it will be automatically set.
   cheHost: ""
+  # Image used by endpoint watchers
+  endpointWatcher:
+    image: quay.io/eclipse/che-endpoint-watcher:nightly
 
   ## Allows to enable and configure TLS
   tls:
@@ -59,7 +62,8 @@ global:
     useSelfSignedCerts: true
     selfSignedCertSecretName: self-signed-certificate
 
-    ## Name of the config-map with public certificates to add to Java trust store of the Che server.
+    ## Name of the config-map with public certificates to add to Java trust store 
+    ## of the Che server, Keycloak and propagate into user workspaces.
     serverTrustStoreConfigMapName: ""
 
 
@@ -105,7 +109,12 @@ global:
   chePluginRegistryUrlFormat: "plugin-registry-%s.%s"
 
 che:
+  limits: {
+    # userWorkspacesRunCount
+  }
   workspace: {}
+    # This variable may contain a set of comma-separated key=value pairs to form the nodeSelector rule
+#    podNodeSelector: "key1=value1,key2=value2"
 #    devfileRegistryUrl: "https://che-devfile-registry.openshift.io/"
 #    pluginBroker:
 #      waitTimeoutMin: "3"
@@ -114,7 +123,7 @@ che:
   logLevel: "INFO"
 
 dashboard:
-  image: quay.io/eclipse/che-dashboard:next
+  image: quay.io/eclipse/che-dashboard:next-react
   imagePullPolicy: "Always"
   memoryRequest: 16Mi
   memoryLimit: 256Mi

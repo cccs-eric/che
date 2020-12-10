@@ -19,10 +19,12 @@ data:
   CHE_PORT: "8080"
 {{- if and .Values.global.tls .Values.global.tls.enabled }}
   CHE_API: https://{{ template "cheHost" . }}/api
+  CHE_API_INTERNAL: https://{{ template "cheHost" . }}/api
   CHE_WEBSOCKET_ENDPOINT:  wss://{{ template "cheHost" . }}/api/websocket
   CHE_INFRA_KUBERNETES_BOOTSTRAPPER_BINARY__URL: https://{{ template "cheHost" . }}/agent-binaries/linux_amd64/bootstrapper/bootstrapper
 {{ else }}
   CHE_API: http://{{ template "cheHost" . }}/api
+  CHE_API_INTERNAL: http://{{ template "cheHost" . }}/api
   CHE_WEBSOCKET_ENDPOINT:  ws://{{ template "cheHost" . }}/api/websocket
   CHE_WEBSOCKET_ENDPOINT__MINOR:  ws://{{ template "cheHost" . }}/api/websocket-minor
   CHE_INFRA_KUBERNETES_BOOTSTRAPPER_BINARY__URL: http://{{ template "cheHost" . }}/agent-binaries/linux_amd64/bootstrapper/bootstrapper
@@ -42,6 +44,7 @@ data:
 {{- if .Values.global.multiuser }}
   CHE_KEYCLOAK_CLIENT__ID: {{ .Values.cheKeycloakClientId | quote}}
   CHE_KEYCLOAK_AUTH__SERVER__URL: {{ template "keycloakAuthUrl" . }}
+  CHE_KEYCLOAK_AUTH__INTERNAL__SERVER__URL: {{ template "keycloakAuthUrl" . }}
   CHE_KEYCLOAK_REALM: {{ .Values.cheKeycloakRealm }}
 {{- end }}
 {{- if (and .Values.global.multiuser .Values.customOidcProvider) }}
@@ -49,6 +52,9 @@ data:
 {{- end }}
 {{- if and .Values.global.multiuser .Values.customOidcUsernameClaim }}
   CHE_KEYCLOAK_USERNAME__CLAIM: {{ .Values.customOidcUsernameClaim }}
+{{- end }}
+{{- if not (eq .Values.global.tls.serverTrustStoreConfigMapName "") }}
+  CHE_TRUSTED__CA__BUNDLES__CONFIGMAP: {{ .Values.global.tls.serverTrustStoreConfigMapName }}
 {{- end }}
   # This is only kept for the upgrade purposes where we need to make sure we don't loose this piece of old configuration
   # so that we can find the data of old workspaces
@@ -89,6 +95,9 @@ data:
   CHE_WORKSPACE_HTTPS__PROXY: {{ .Values.cheWorkspaceHttpsProxy | quote}}
   CHE_WORKSPACE_NO__PROXY: {{ .Values.cheWorkspaceNoProxy | quote}}
   CHE_LIMITS_WORKSPACE_IDLE_TIMEOUT: '{{ .Values.global.workspaceIdleTimeout }}'
+{{- if .Values.che.limits.userWorkspacesRunCount }}
+  CHE_LIMITS_USER_WORKSPACES_RUN_COUNT: {{ .Values.che.limits.userWorkspacesRunCount | quote }}
+{{- end }}
 {{- if .Values.workspaceDefaultRamRequest }}
   CHE_WORKSPACE_DEFAULT_MEMORY_REQUEST_MB: {{ .Values.workspaceDefaultRamRequest | quote }}
 {{- end }}
@@ -97,13 +106,17 @@ data:
 {{- end }}
 {{- if .Values.che.workspace.devfileRegistryUrl }}
   CHE_WORKSPACE_DEVFILE__REGISTRY__URL: {{ .Values.che.workspace.devfileRegistryUrl | quote }}
+  CHE_WORKSPACE_DEVFILE__REGISTRY__INTERNAL__URL: {{ .Values.che.workspace.devfileRegistryUrl | quote }}
 {{- else if .Values.cheDevfileRegistry.deploy }}
   CHE_WORKSPACE_DEVFILE__REGISTRY__URL: {{ template "devfileRegistryUrl" . }}
+  CHE_WORKSPACE_DEVFILE__REGISTRY__INTERNAL__URL: {{ template "devfileRegistryUrl" . }}
 {{- end }}
 {{- if .Values.che.workspace.pluginRegistryUrl }}
   CHE_WORKSPACE_PLUGIN__REGISTRY__URL: {{ .Values.che.workspace.pluginRegistryUrl | quote }}
+  CHE_WORKSPACE_PLUGIN__REGISTRY__INTERNAL__URL: {{ .Values.che.workspace.pluginRegistryUrl | quote }}
 {{- else if .Values.chePluginRegistry.deploy }}
   CHE_WORKSPACE_PLUGIN__REGISTRY__URL: {{ template "pluginRegistryUrl" . }}
+  CHE_WORKSPACE_PLUGIN__REGISTRY__INTERNAL__URL: {{ template "pluginRegistryUrl" . }}
 {{- end }}
 {{- if .Values.che.workspace.pluginBroker }}
   {{- if .Values.che.workspace.pluginBroker.waitTimeoutMin }}
@@ -115,6 +128,9 @@ data:
 {{- end }}
 {{- if .Values.global.cheWorkspaceClusterRole }}
   CHE_INFRA_KUBERNETES_CLUSTER__ROLE__NAME: {{ .Values.global.cheWorkspaceClusterRole }}
+{{- end }}
+{{- if .Values.che.workspace.podNodeSelector }}
+  CHE_WORKSPACE_POD_NODE__SELECTOR: {{ .Values.che.workspace.podNodeSelector | quote }}
 {{- end }}
   CHE_CORS_ENABLED: "false"
   CHE_CORS_ALLOW__CREDENTIALS: "false"
