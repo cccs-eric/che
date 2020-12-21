@@ -28,6 +28,7 @@ export class DebugView {
     }
 
     async clickOnDebugConfigurationItem(itemText: string) {
+        this.driverHelper.wait(5000);
         Logger.debug(`DebugView.clickOnDebugConfigurationItem "${itemText}"`);
 
         const configurationItemLocator: By = By.xpath(`//select[contains(@class,'debug-configuration')]//option[text()=\'${itemText}\']`);
